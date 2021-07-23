@@ -16,6 +16,8 @@ target 'TodoApp' do
 
   pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo'
 
+  pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
+
   target 'TodoAppTests' do
     inherit! :complete
     # Pods for testing

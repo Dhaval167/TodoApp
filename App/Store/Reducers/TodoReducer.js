@@ -1,6 +1,7 @@
 import {
   IS_NETWORK_AVAILABLE,
   REMOVE_TODO,
+  SEARCH_TODO,
   TODO_LIST,
   UPDATE_IS_COMPLETED_VALUE,
 } from '../Actions/TodoActions';
@@ -28,14 +29,16 @@ function todoReducer(state = initialState, action) {
 
     case UPDATE_IS_COMPLETED_VALUE:
       var data = state.todo.map((item, index) =>
-        index == action.data && item.isCompleted == false
-          ? {...item, isCompleted: true}
-          : {...item, isCompleted: false},
+        index == action.data && item.isCompleted != null
+          ? {...item, isCompleted: !item.isCompleted}
+          : item,
       );
+
       return {
         ...state,
         todo: data,
       };
+
     case IS_NETWORK_AVAILABLE:
       var isConnected = action.data.isConnected;
       var netWorkType = action.data.networkType;

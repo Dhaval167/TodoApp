@@ -9,5 +9,4 @@ const TodoScreen = props => {
     </View>
   );
 };
-
 export default TodoScreen;

@@ -2,6 +2,7 @@ export const TODO_LIST = 'TODO_LIST';
 export const REMOVE_TODO = ' REMOVE_TODO';
 export const UPDATE_IS_COMPLETED_VALUE = 'UPDATE_IS_COMPLETED_VALUE';
 export const IS_NETWORK_AVAILABLE = 'IS_NETWORK_AVAILABLE';
+export const SEARCH_TODO = 'SEARCH_TODO';
 
 export const todoActions = title => {
   return dispatch => {

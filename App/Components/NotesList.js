@@ -11,27 +11,29 @@ import {
   Image,
 } from 'react-native';
 
-import {Avatar, Fab} from 'native-base';
-
+import {TextInput} from 'react-native-paper';
+import {Avatar, Fab, useToast} from 'native-base';
 import {SwipeListView} from 'react-native-swipe-list-view';
-import IconM from 'react-native-vector-icons/MaterialIcons';
-import IconMI from 'react-native-vector-icons/MaterialCommunityIcons';
-import AddModel from './AddModel';
-import Icon from 'react-native-vector-icons/AntDesign';
-
+import {Icon} from 'react-native-elements';
+import {iconType} from '../config/Helper';
 import {useSelector, useDispatch} from 'react-redux';
 import {
   deleteTodoActions,
   updateIsComplete,
+  todoActions,
 } from '../Store/Actions/TodoActions';
 
 const rowTranslateAnimatedValues = {};
 
 const NotesList = props => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [mode, setMode] = useState('Basic');
+  const Toast = useToast();
+  const [todoValue, setTodoValue] = useState('');
+  const [searchValue, setSearchValue] = useState('');
+  const [searchData, setSearchData] = useState([]);
 
   const {todo} = useSelector(state => state.todoReducer);
+  console.log('Todo', todo);
+
   const dispatch = useDispatch();
 
   todo.map((item, index) => {
@@ -40,12 +42,58 @@ const NotesList = props => {
 
   const animationIsRunning = useRef(false);
 
-  const closeRow = (rowMap, rowKey) => {
+  const onChangeTextHandler = text => {
+    setTodoValue(text);
+  };
+
+  const onSaveButtonHandler = () => {
+    if (todoValue.length == 0 || todoValue == '' || todoValue == undefined) {
+      return Toast.show({title: 'Enter Some Value', duration: 500});
+    } else {
+      var todoList = {
+        title: todoValue,
+        isCompleted: false,
+      };
+      dispatch(todoActions(todoList));
+      setTodoValue('');
+    }
+  };
+
+  const onChangeSearchTextHandler = txt => {
+    console.log('Text', txt);
+    setSearchValue(txt);
+    let text = txt.toLowerCase();
+    let tracks = todo;
+    let filterTracks = tracks.filter(item => {
+      if (item.title.toLowerCase().match(text)) {
+        return item;
+      }
+    });
+    setSearchData(filterTracks);
+    // if (text == '') {
+    //   setSearchData([]);
+    // }
+    // todo.filter((item, index) => {
+    //   if (item.title == text) {
+    //     setSearchData([item]);
+    //   }
+    // });
+  };
+  console.log('search', searchData);
+
+  // const searchButtonHandler = searchText => {
+  //   if (searchText == undefined || searchText == '' || searchText.length == 0) {
+  //     return Toast.show({title: 'Enter Some Value', duration: 500});
+  //   }
+  // };
+
+  const updateRow = (rowMap, rowKey) => {
     if (rowMap[rowKey]) {
       rowMap[rowKey].closeRow();
       dispatch(updateIsComplete(rowKey));
     }
   };
+
   const deleteRow = (rowMap, rowKey) => {
     if (rowMap[rowKey]) {
       rowMap[rowKey].closeRow();
@@ -146,13 +194,13 @@ const NotesList = props => {
           style={{
             justifyContent: 'center',
             alignItems: 'center',
+            marginHorizontal: 20,
           }}
-          onPress={() => closeRow(rowMap, data.index)}
+          onPress={() => deleteRow(rowMap, data.index)}
           activeOpacity={0.5}>
-          <IconMI
-            name={
-              data.item.isCompleted ? 'sticker-check' : 'sticker-check-outline'
-            }
+          <Icon
+            type={iconType.materialIcon}
+            name="delete"
             color="white"
             size={24}
           />
@@ -163,9 +211,16 @@ const NotesList = props => {
             justifyContent: 'center',
             alignItems: 'center',
           }}
-          onPress={() => deleteRow(rowMap, data.index)}
+          onPress={() => updateRow(rowMap, data.index)}
           activeOpacity={0.5}>
-          <IconM name="delete" color="white" size={24} />
+          <Icon
+            type={iconType.materialCommunity}
+            name={
+              data.item.isCompleted ? 'sticker-check' : 'sticker-check-outline'
+            }
+            color="white"
+            size={24}
+          />
         </TouchableOpacity>
       </View>
     );
@@ -173,6 +228,55 @@ const NotesList = props => {
 
   return (
     <SafeAreaView style={{flex: 1}}>
+      <View
+        style={{
+          marginHorizontal: 10,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginTop: 15,
+          marginBottom: 15,
+        }}>
+        <TextInput
+          style={{
+            width: '90%',
+            height: 45,
+            borderRadius: 10,
+          }}
+          onChangeText={onChangeSearchTextHandler}
+          placeholder="Search"
+        />
+
+        <TouchableOpacity
+          style={{position: 'absolute', right: 20, top: 5}}
+          onPress={() => {}}>
+          <Icon type={iconType.materialIcon} name="search" size={38} />
+        </TouchableOpacity>
+      </View>
+
+      <View
+        style={{
+          marginHorizontal: 10,
+          width: '100%',
+          marginTop: 15,
+          marginBottom: 15,
+          elevation: 5,
+        }}>
+        <TextInput
+          style={{
+            width: '95%',
+            borderRadius: 10,
+          }}
+          value={todoValue}
+          onChangeText={onChangeTextHandler}
+          placeholder="Add Note"
+        />
+        <TouchableOpacity
+          style={{position: 'absolute', right: 20, top: 10}}
+          onPress={onSaveButtonHandler}>
+          <Icon type={iconType.materialIcon} name="note-add" size={38} />
+        </TouchableOpacity>
+      </View>
+
       {todo.length == 0 ? (
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
           <View
@@ -198,9 +302,15 @@ const NotesList = props => {
             </Text>
           </View>
         </View>
+      ) : searchValue.length > 0 && searchData.length == 0 ? (
+        <View style={{justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={{color: 'black', fontSize: 24, fontWeight: 'bold'}}>
+            No Data Found
+          </Text>
+        </View>
       ) : (
         <SwipeListView
-          data={todo}
+          data={searchValue.length > 0 ? searchData : todo}
           keyExtractor={(item, index) => index}
           renderItem={renderItem}
           renderHiddenItem={renderHiddenItem}
@@ -212,7 +322,8 @@ const NotesList = props => {
           onSwipeValueChange={onSwipeValueChange}
           useNativeDriver={false}
           leftActionValue={50}
-          rightActionValue={-55}
+          disableRightSwipe
+          rightActionValue={-100}
           leftActivationValue={75}
           rightActivationValue={-50}
           onLeftAction={onLeftAction}
@@ -221,22 +332,6 @@ const NotesList = props => {
           onRightActionStatusChange={onRightActionStatusChange}
         />
       )}
-      <AddModel
-        isOpen={modalVisible}
-        onClose={setModalVisible}
-        onCloseButton={() => {
-          setModalVisible(!modalVisible);
-        }}
-        onSaveButton={() => {
-          setModalVisible(!modalVisible);
-        }}
-      />
-      <Fab
-        onPress={() => setModalVisible(!modalVisible)}
-        position="absolute"
-        size="sm"
-        icon={<Icon color="white" name="plus" size={24} />}
-      />
     </SafeAreaView>
   );
 };
@@ -247,7 +342,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     flex: 1,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     paddingLeft: 15,
     paddingRight: 15,
   },
