@@ -2,7 +2,7 @@ export const TODO_LIST = 'TODO_LIST';
 export const REMOVE_TODO = ' REMOVE_TODO';
 export const UPDATE_IS_COMPLETED_VALUE = 'UPDATE_IS_COMPLETED_VALUE';
 export const IS_NETWORK_AVAILABLE = 'IS_NETWORK_AVAILABLE';
-export const SEARCH_TODO = 'SEARCH_TODO';
+export const PRIORITY_TODO = 'PRIORITY_TODO';
 
 export const todoActions = title => {
   return dispatch => {
@@ -19,6 +19,12 @@ export const deleteTodoActions = todo => {
 export const updateIsComplete = value => {
   return dispatch => {
     dispatch({type: UPDATE_IS_COMPLETED_VALUE, data: value});
+  };
+};
+
+export const priorityTodo = data => {
+  return dispatch => {
+    dispatch({type: PRIORITY_TODO, data: data});
   };
 };
 

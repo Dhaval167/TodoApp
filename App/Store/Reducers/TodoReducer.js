@@ -1,5 +1,6 @@
 import {
   IS_NETWORK_AVAILABLE,
+  PRIORITY_TODO,
   REMOVE_TODO,
   SEARCH_TODO,
   TODO_LIST,
@@ -20,8 +21,6 @@ function todoReducer(state = initialState, action) {
     case REMOVE_TODO:
       console.log('remove-called');
       var data = state.todo.filter((item, index) => index !== action.data);
-      console.log('NewData', data);
-
       return {
         ...state,
         todo: data,
@@ -33,11 +32,13 @@ function todoReducer(state = initialState, action) {
           ? {...item, isCompleted: !item.isCompleted}
           : item,
       );
-
       return {
         ...state,
         todo: data,
       };
+
+    case PRIORITY_TODO:
+      return {...state, todo: action.data};
 
     case IS_NETWORK_AVAILABLE:
       var isConnected = action.data.isConnected;
