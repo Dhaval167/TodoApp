@@ -18,6 +18,8 @@ target 'TodoApp' do
 
   pod 'RNReanimated', :path => '../node_modules/react-native-reanimated'
 
+  pod 'react-native-pager-view', :path => '../node_modules/react-native-pager-view'
+
   target 'TodoAppTests' do
     inherit! :complete
     # Pods for testing

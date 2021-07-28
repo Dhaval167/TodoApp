@@ -1,33 +1,34 @@
 import React, {Component} from 'react';
 import {
-  SafeAreaView,
   TouchableOpacity,
   View,
   Text,
-  TouchableHighlight,
   StyleSheet,
   Animated,
-  Dimensions,
+  Keyboard,
   Image,
+  Alert,
+  TextInput,
 } from 'react-native';
 import {Avatar, Fab, useToast} from 'native-base';
-import DraggableFlatList, {
-  RenderItemParams,
-} from 'react-native-draggable-flatlist';
+import DraggableFlatList from 'react-native-draggable-flatlist';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
-import {RectButton} from 'react-native-gesture-handler';
-import {TextInput} from 'react-native-paper';
+import {TabView, SceneMap, TabBar} from 'react-native-tab-view';
 import {Icon} from 'react-native-elements';
 import {iconType} from '../config/Helper';
-import {useSelector, useDispatch, connect} from 'react-redux';
+import {connect} from 'react-redux';
 import {
   deleteTodoActions,
   updateIsComplete,
   todoActions,
   priorityTodo,
+  isCompletedTodo,
+  isVisibleOptionMenu,
+  clearCompletedTodo,
 } from '../Store/Actions/TodoActions';
+import Header from './Header';
+import CompletedTodo from './CompletedTodo';
 
-let row: Array<any> = [];
 let prevOpenedRow;
 
 class NotesList extends Component {
@@ -39,240 +40,73 @@ class NotesList extends Component {
       searchData: [],
       isRowOpen: '',
       prevState: '',
+      index: 0,
+      routes: [
+        {
+          key: 'todo',
+          title: 'Todo',
+        },
+        {
+          key: 'todoCompleted',
+          title: 'TodoCompleted',
+        },
+      ],
     };
     this.refsArray = [];
   }
 
-  //const Toast = useToast();
-  // const _todo = useSelector(state => state.todoReducer.todo);
+  TodoRoute = () => {
+    const {_todo} = this.props;
+    const {searchValue, searchData, todoValue, index} = this.state;
 
-  closeRow(index) {
-    this.refsArray[index].close();
-  }
-
-  closeOtherRow(index) {
-    console.log('index', index);
-
-    this.setState((a, b, c) => ({prevState: a.isRowOpen}));
-    console.log('State', this.state.prevState);
-
-    if (prevOpenedRow && prevOpenedRow !== this.refsArray[index]) {
-      this.refsArray[this.state.prevState].close();
-    }
-    prevOpenedRow = this.refsArray[index];
-  }
-
-  onChangeTextHandler = text => {
-    this.setState({todoValue: text});
-    //setTodoValue(text);
-  };
-
-  deleteRow = index => {
-    this.props.deleteTodoActions(index);
-    this.closeRow(index);
-  };
-
-  onChangeSearchTextHandler = txt => {
-    console.log('Text', txt);
-    this.setState({searchValue: txt});
-
-    let text = txt.toLowerCase();
-    let tracks = this.props._todo;
-    let filterTracks = tracks.filter(item => {
-      if (item.title.toLowerCase().match(text)) {
-        return item;
-      }
-    });
-    this.setState({searchData: filterTracks});
-  };
-
-  onSaveButtonHandler = () => {
-    const {todoValue} = this.state;
-    if (todoValue.length == 0 || todoValue == '' || todoValue == undefined) {
-      return Toast.show({title: 'Enter Some Value', duration: 500});
-    } else {
-      var todoList = {
-        title: todoValue,
-        isCompleted: false,
-      };
-
-      this.props.todoActions(todoList);
-      this.setState({todoValue: ''});
-    }
-  };
-
-  renderItem(item, index, drag, isActive) {
-    //console.log('main this', index);
-    return (
-      <Swipeable
-        ref={ref => {
-          this.refsArray[index] = ref; //or this.refsArray[item.id]
-        }}
-        overshootRight={false}
-        friction={2}
-        renderRightActions={(progress, dragX) => {
-          console.log('renderRightAction');
-          const trans = dragX.interpolate({
-            inputRange: [-100, 0],
-            outputRange: [0.7, 0],
-          });
-          return (
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                backgroundColor: 'red',
-                flexDirection: 'row',
-              }}>
-              <View
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginHorizontal: 10,
-                }}>
-                <Animated.Text
-                  style={[
-                    styles.actionText,
-                    {
-                      transform: [{translateX: trans}],
-                    },
-                  ]}>
-                  <TouchableOpacity
-                    onPress={() => this.deleteRow(index)}
-                    activeOpacity={0.5}>
-                    <Icon
-                      type={iconType.materialIcon}
-                      name="delete"
-                      color="white"
-                      size={24}
-                    />
-                  </TouchableOpacity>
-                </Animated.Text>
-              </View>
-              <View
-                style={{
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  marginRight: 10,
-                }}>
-                <Animated.Text
-                  style={[
-                    styles.actionText,
-                    {
-                      transform: [{translateX: trans}],
-                    },
-                  ]}>
-                  <TouchableOpacity onPress={() => {}} activeOpacity={0.5}>
-                    <Icon
-                      type={iconType.materialIcon}
-                      name="check"
-                      color="white"
-                      size={24}
-                    />
-                  </TouchableOpacity>
-                </Animated.Text>
-              </View>
-            </View>
-          );
-        }}
-        onSwipeableRightWillOpen={() => {
-          console.log(' swipe open');
-          this.setState({isRowOpen: index});
-          this.closeOtherRow(index);
-        }}>
-        <View style={styles.rowFrontContainer}>
-          <TouchableOpacity
-            underlayColor="#AAA"
-            onLongPress={drag}
-            style={{
-              backgroundColor: isActive
-                ? 'red'
-                : item.isCompleted
-                ? 'cyan'
-                : 'white',
-              //backgroundColor: isActive ? 'red' : 'white',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: 80,
-              underlayColor: '#AAA',
-            }}>
-            <View
-              style={{
-                width: '100%',
-                flexDirection: 'row',
-                alignItems: 'center',
-              }}>
-              <TouchableOpacity
-                onPress={() => this.props.updateIsComplete(index)}
-                style={{marginHorizontal: 10}}>
-                <Avatar color="white">{index.toString()}</Avatar>
-              </TouchableOpacity>
-              <View style={{marginLeft: 20}}>
-                <Text ellipsizeMode="tail">{item.title}</Text>
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </Swipeable>
-    );
-  }
-
-  render() {
-    const {searchValue, searchData, todoValue} = this.state;
     return (
       <View style={{flex: 1}}>
-        <View
-          style={{
-            marginHorizontal: 10,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginTop: 15,
-            marginBottom: 15,
-          }}>
-          <TextInput
-            style={{
-              width: '90%',
-              height: 45,
-              borderRadius: 10,
-            }}
-            onChangeText={this.onChangeSearchTextHandler}
-            placeholder="Search"
-          />
-          <TouchableOpacity
-            style={{position: 'absolute', right: 20, top: 5}}
-            onPress={() => {}}>
-            <Icon type={iconType.materialIcon} name="search" size={38} />
-          </TouchableOpacity>
-        </View>
+        <Header title="Todo" index={index} />
+        <View style={styles.inputContainer}>
+          <View style={styles.textInput}>
+            <TextInput
+              style={styles.textInputSearch}
+              onChangeText={this.onChangeSearchTextHandler}
+              placeholder="Search"
+              placeholderTextColor="grey"
+              selectionColor="#353434"
+              underlineColor="white"
+            />
+            <TouchableOpacity
+              style={{position: 'absolute', right: '2%'}}
+              onPress={() => {}}>
+              <Icon
+                type={iconType.materialIcon}
+                name="search"
+                size={34}
+                color="white"
+              />
+            </TouchableOpacity>
+          </View>
 
-        <View
-          style={{
-            marginHorizontal: 10,
-            width: '100%',
-            marginTop: 15,
-            marginBottom: 15,
-            elevation: 5,
-          }}>
-          <TextInput
-            style={{
-              width: '95%',
-              borderRadius: 10,
-            }}
-            value={todoValue}
-            onChangeText={this.onChangeTextHandler}
-            onSubmitEditing={this.onSaveButtonHandler}
-            placeholder="Add Note"
-          />
-          <TouchableOpacity
-            style={{position: 'absolute', right: 20, top: 10}}
-            onPress={this.onSaveButtonHandler}>
-            <Icon type={iconType.materialIcon} name="note-add" size={38} />
-          </TouchableOpacity>
+          <View style={styles.textInput}>
+            <TextInput
+              style={styles.textInputAddNote}
+              value={todoValue}
+              onChangeText={this.onChangeTextHandler}
+              onSubmitEditing={this.onSaveButtonHandler}
+              placeholder="Add Note"
+              placeholderTextColor="grey"
+              underlineColor="white"
+            />
+            <TouchableOpacity
+              style={{position: 'absolute', right: '2%'}}
+              onPress={this.onSaveButtonHandler}>
+              <Icon
+                type={iconType.materialIcon}
+                name="note-add"
+                size={34}
+                color="white"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-
-        {this.props._todo.length == 0 ? (
+        {_todo.length == 0 ? (
           <View
             style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
             <View
@@ -312,9 +146,218 @@ class NotesList extends Component {
             }
             keyExtractor={(item, index) => index.toString()}
             onDragEnd={({data}) => this.props.priorityTodo(data)}
-            dragItemOverflow={true}
+            dragItemOverflow={false}
+            autoscrollThreshold={60}
+            autoscrollSpeed={500}
           />
         )}
+      </View>
+    );
+  };
+
+  TodoCompletedRoute = () => {
+    const {_todoCompleted} = this.props;
+
+    return (
+      <View style={{flex: 1}}>
+        <Header
+          title="TodoCompleted"
+          index={this.state.index}
+          clear={() => this.props.clearCompletedTodo()}
+        />
+        <CompletedTodo data={_todoCompleted} />
+      </View>
+    );
+  };
+
+  renderScene = SceneMap({
+    todo: this.TodoRoute,
+    todoCompleted: this.TodoCompletedRoute,
+  });
+
+  renderTabBar = props => (
+    <TabBar
+      {...props}
+      indicatorStyle={styles.tabIndicator}
+      style={{
+        backgroundColor: '#353434',
+      }}
+      getLabelText={({route}) => route.title}
+    />
+  );
+
+  closeRow(index) {
+    this.refsArray[index].close();
+  }
+
+  closeOtherRow(index) {
+    this.setState((a, b, c) => ({prevState: a.isRowOpen}));
+    if (prevOpenedRow && prevOpenedRow !== this.refsArray[index]) {
+      this.refsArray[this.state.prevState].close();
+    }
+    prevOpenedRow = this.refsArray[index];
+  }
+
+  onChangeTextHandler = text => {
+    this.setState({todoValue: text});
+  };
+
+  deleteRow = index => {
+    this.props.deleteTodoActions(index);
+    this.closeRow(index);
+  };
+
+  onChangeSearchTextHandler = txt => {
+    console.log('Text', txt);
+    this.setState({searchValue: txt});
+    let text = txt.toLowerCase();
+    let tracks = this.props._todo;
+    let filterTracks = tracks.filter(item => {
+      if (item.title.toLowerCase().match(text)) {
+        return item;
+      }
+    });
+    this.setState({searchData: filterTracks});
+  };
+
+  onSaveButtonHandler = () => {
+    const {todoValue} = this.state;
+    if (todoValue.length == 0 || todoValue == '' || todoValue == undefined) {
+      return alert('Enter Some Value');
+    } else {
+      var todoList = {
+        title: todoValue,
+        isCompleted: false,
+      };
+      this.props.todoActions(todoList);
+      this.setState({todoValue: ''});
+      Keyboard.dismiss();
+    }
+  };
+
+  renderItem(item, index, drag, isActive) {
+    return (
+      <Swipeable
+        ref={ref => {
+          this.refsArray[index] = ref; //or this.refsArray[item.id]
+        }}
+        overshootRight={false}
+        renderRightActions={(progress, dragX) => {
+          const trans = dragX.interpolate({
+            inputRange: [-100, 0],
+            outputRange: [0.7, 0],
+          });
+          return (
+            <View style={styles.hiddenViewContainer}>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginHorizontal: 5,
+                }}>
+                <Animated.Text
+                  style={[
+                    styles.actionText,
+                    {
+                      transform: [{translateX: trans}],
+                    },
+                  ]}>
+                  <TouchableOpacity
+                    onPress={() => this.deleteRow(index)}
+                    activeOpacity={0.5}>
+                    <Icon
+                      type={iconType.materialIcon}
+                      name="delete"
+                      color="white"
+                      size={28}
+                    />
+                  </TouchableOpacity>
+                </Animated.Text>
+              </View>
+              <View
+                style={{
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: 5,
+                }}>
+                <Animated.Text
+                  style={[
+                    styles.actionText,
+                    {
+                      transform: [{translateX: trans}],
+                    },
+                  ]}>
+                  <TouchableOpacity onPress={() => {}} activeOpacity={0.5}>
+                    <Icon
+                      type={iconType.materialIcon}
+                      name="check"
+                      color="white"
+                      size={28}
+                    />
+                  </TouchableOpacity>
+                </Animated.Text>
+              </View>
+            </View>
+          );
+        }}
+        onSwipeableRightWillOpen={() => {
+          this.setState({isRowOpen: index});
+          this.closeOtherRow(index);
+        }}>
+        <View style={styles.rowFrontContainer}>
+          <TouchableOpacity
+            underlayColor="#AAA"
+            onLongPress={drag}
+            style={{
+              backgroundColor: isActive
+                ? 'red'
+                : item.isCompleted
+                ? 'cyan'
+                : 'white',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: 80,
+              underlayColor: '#AAA',
+              marginVertical: 10,
+              marginHorizontal: 10,
+              borderRadius: 10,
+            }}>
+            <View
+              style={{
+                width: '100%',
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}>
+              <TouchableOpacity
+                onPress={() => {
+                  this.props.updateIsComplete(index);
+                  this.props.isCompletedTodo(item, index);
+                }}
+                style={{marginHorizontal: 10}}>
+                <Avatar color="white">{index.toString()}</Avatar>
+              </TouchableOpacity>
+              <View style={{marginLeft: 20}}>
+                <Text ellipsizeMode="tail">{item.title}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </Swipeable>
+    );
+  }
+
+  render() {
+    const {index, routes} = this.state;
+    return (
+      <View style={{flex: 1}}>
+        <TabView
+          navigationState={{index, routes}}
+          renderScene={this.renderScene}
+          onIndexChange={index => this.setState({index: index})}
+          initialLayout={{width: '100%'}}
+          renderTabBar={this.renderTabBar}
+          tabBarPosition="bottom"
+        />
       </View>
     );
   }
@@ -350,10 +393,75 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 5,
     borderBottomRightRadius: 5,
   },
+  textInputAddNote: {
+    width: '100%',
+    height: 45,
+    borderColor: 'white',
+    borderBottomWidth: 1,
+    color: 'white',
+    backgroundColor: '#353434',
+    textAlign: 'left',
+    marginLeft: '10%',
+    marginRight: '10%',
+    color: 'white',
+  },
+  textInputSearch: {
+    width: '100%',
+    height: 45,
+    borderColor: 'white',
+    borderBottomWidth: 1,
+    color: 'white',
+    backgroundColor: '#353434',
+    textAlign: 'left',
+    marginLeft: '10%',
+    marginRight: '10%',
+    color: 'white',
+  },
+  inputContainer: {
+    backgroundColor: '#353434',
+    paddingBottom: '7%',
+    elevation: 3,
+    borderRadius: 10,
+    marginHorizontal: 10,
+    marginVertical: 10,
+  },
+  hiddenViewContainer: {
+    width: 80,
+    height: 80,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'red',
+    flexDirection: 'row',
+    marginVertical: 10,
+    borderRadius: 10,
+    marginRight: 5,
+    padding: 2,
+  },
+  textInput: {
+    marginHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  tabIndicator: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    width: 8,
+    height: 8,
+    borderRadius: 8 / 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    left: '25%',
+    right: '25%',
+    marginBottom: 4,
+  },
 });
 
 const mapStateToProps = state => ({
   _todo: state.todoReducer.todo,
+  _todoCompleted: state.todoReducer.completedTodo,
 });
 
 const mapDispatchToProps = {
@@ -361,6 +469,9 @@ const mapDispatchToProps = {
   updateIsComplete,
   todoActions,
   priorityTodo,
+  isCompletedTodo,
+  isVisibleOptionMenu,
+  clearCompletedTodo,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(NotesList);

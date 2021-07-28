@@ -9,7 +9,7 @@ import {PersistGate} from 'redux-persist/integration/react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import rootReducers from './App/Store';
 import ReduxThunk from 'redux-thunk';
-
+import {MenuProvider} from 'react-native-popup-menu';
 
 const App = () => {
   const persistConfig = {
@@ -25,7 +25,9 @@ const App = () => {
     <Provider store={store}>
       <PersistGate persistor={persistedStore} loading={null}>
         <NativeBaseProvider>
-          <RootNavigation />
+          <MenuProvider>
+            <RootNavigation />
+          </MenuProvider>
         </NativeBaseProvider>
       </PersistGate>
     </Provider>

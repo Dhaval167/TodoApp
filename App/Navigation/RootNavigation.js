@@ -30,7 +30,13 @@ const RootNavigation = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Todo">
-        <Stack.Screen name="Todo" component={TodoScreen} />
+        <Stack.Screen
+          name="Todo"
+          component={TodoScreen}
+          options={{
+            headerShown: false,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
